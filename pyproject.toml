@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.poetry]
+name = "arpesnet"
+version = "1.0.0"
+description = "A package for neural network-based ARPES analysis"
+authors = ["Steinn Ymir Agustsson", "Mohammad Ahsanul Haque", "Thi Tam Truong"]
+license = "GNU General Public License v3.0"
+readme = "README.md"
+repository = "https://github.com/ARPESonthefly/arpesnet"
+keywords = ["ARPES", "neural network", "machine learning"]
+
+fixable = ["ALL"]
+line-length = 100 # change the default line length number or characters.

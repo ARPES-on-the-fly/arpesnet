@@ -1,0 +1,60 @@
+model: # AR{ESNet model parameters
+  input_shape: [256, 256]
+  aenc: "arpesnet"
+  kwargs:
+    kernel_size: 11
+    kernel_decay: 2
+    n_layers: 1
+    start_channels: 4
+    max_channels: 32
+    n_blocks: 5
+    input_shape: [256, 256]
+    relu: PReLU
+    relu_kwargs: {num_parameters: 1}
+
+preprocessing: # preprocessing steps, applied in order, before training
+  Resize: [256, 256] # should be the same as model input_shape
+  NormalizeMinMax: [0,100]
+
+training_augmentations: # augmentations applied during training, in order
+  RandomResizedCrop:
+    size: [256, 256]
+    scale: [0.8, 1.] #[0.6, 1.0]
+    ratio:  [0.8, 1.2] # [0.5, 1.5]
+  Flip:
+    p: 0.5
+  NormalizeMinMax: [0,100]
+
+noise_augmentations: # augmentations applied during training, in order
+  SetRandomPoissonExposure: [50_000,100_000_000]
+  NormalizeMinMax: [0,100]
+
+validation_augmentations:
+  Resize: [256, 256]
+  NormalizeMinMax: [0,100]
+
+loss: # loss function and parameters
+  criteria: ['mse'] # 'mse','psnr','ssim'... or list of them
+  weights: [1.0] # weights for each loss function
+  contractive: False # contractive autoencoder loss
+  lam: 0.0001 # weight for contractive loss
+
+optimizer: # optimizer and parameters
+  name: 'Adam' 
+  kwargs:  
+    lr: 0.001
+    weight_decay: 0.0
+
+train: # training parameters
+  split_ratio: [0.8,0.2] # train/test split
+  batch_size: 32 # batch size
+  n_epochs: 1000 # number of epochs
+  shuffle: True
+  drop_last: True
+  denoiser: False
+
+device: # device settings
+  seed: 0 # random seed 
+  use_gpu: True # use GPU if available
+  copy_to_cuda: True # copy data to GPU, if False, data is copied to GPU on-the-fly and pin_memory is enabled
+
