@@ -20,6 +20,12 @@ conda create -n arpesnet python=3.11
 
 This will create a new empty environment called `arpesnet`
 
+Activate this environment
+
+```bash
+conda activate arpesnet
+```
+
 In order to install pytorch with the optimal settings, to have access, for example to GPU computing, we recomend folloiwing the instructions on the [pytorch website](https://pytorch.org/get-started/locally/)
 
 Assuming we want to install pytorch with CUDA 12.1, we can run the following command:
