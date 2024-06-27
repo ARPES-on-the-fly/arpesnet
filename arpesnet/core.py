@@ -713,13 +713,11 @@ class ModelTrainer:
             clim = img.min(), img.max()
             diff = img - rec
             vmax = clim[1]
-            axes[f"original_{i}"].imshow(img, cmap="viridis", clim=clim, origin="lower")
-            axes[f"rec_{i}"].imshow(rec, cmap="viridis", clim=clim, origin="lower")
+            axes[f"original_{i}"].imshow(img.numpy(), cmap="viridis", clim=clim, origin="lower")
+            axes[f"rec_{i}"].imshow(rec.numpy(), cmap="viridis", clim=clim, origin="lower")
             axes[f"diff_{i}"].imshow(
-                diff, cmap="bwr", clim=(-vmax, vmax), origin="lower"
+                diff.numpy(), cmap="bwr", clim=(-vmax, vmax), origin="lower"
             )
-        # fig.canvas.flush_events()
-        # plt.pause(0.05)
         if savename is not None:
             fig.savefig(Path(savename).with_suffix(".png"), dpi=300)
             print(f"saved figure as {savename}.png")
