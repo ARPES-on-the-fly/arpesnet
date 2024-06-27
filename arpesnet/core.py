@@ -3,16 +3,14 @@ from __future__ import annotations
 import time
 from pathlib import Path
 
-import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-
 import torch
+import torchmetrics as tm
 from torch import nn
 from torch.utils.data import DataLoader, random_split
 from torchvision.transforms import v2
-from tqdm.auto import trange, tqdm
-import torchmetrics as tm
+from tqdm.auto import trange
 
 import arpesnet as an
 from arpesnet.utils import load_config, load_torch_datasets, sec2min
@@ -256,7 +254,9 @@ class ModelTrainer:
                                 getattr(an.transform, k)(*args, **kwargs)
                             )
                         else:
-                            self.transforms[target].append(getattr(v2, k)(*args, **kwargs))
+                            self.transforms[target].append(
+                                getattr(v2, k)(*args, **kwargs)
+                            )
                     except AttributeError:
                         if self.verbose:
                             print(f"Unknown {target}: {k}")
@@ -265,8 +265,12 @@ class ModelTrainer:
     def _init_model(self) -> None:
         """Load the model from the configuration file"""
         self.model = "ARPESNet"
-        self.encoder = an.model.Encoder(**self.config["model"]["kwargs"]).to(self.device)
-        self.decoder = an.model.Decoder(**self.config["model"]["kwargs"]).to(self.device)
+        self.encoder = an.model.Encoder(**self.config["model"]["kwargs"]).to(
+            self.device
+        )
+        self.decoder = an.model.Decoder(**self.config["model"]["kwargs"]).to(
+            self.device
+        )
 
     def describe(self) -> str:
         """
@@ -291,29 +295,31 @@ class ModelTrainer:
         print(self.encoder)
         print(self.decoder)
         orig_img = self.train_data[0]
-        orig_size = np.prod(orig_img.shape) * 32
+        orig_size = orig_img.nelement() * 32
         print(
             f"input  : {orig_img.shape} {orig_img.dtype}\t"
-            f"| size: {np.prod(orig_img.shape):,.0f}\t| {orig_size/1024:,.2f} KB"
+            f"| size: {orig_img.nelement():,.0f}\t| {orig_size/1024:,.2f} KB"
         )
         t0 = time.time()
         encoded = self.encoder(orig_img.unsqueeze(0).to(self.device))
         enc_time = time.time() - t0
-        enc_size = np.prod(encoded.shape) * 32
+        enc_size = encoded.nelement() * 32
         print(
             f"encoded: {encoded.shape} {encoded.dtype}\t"
-            f"| size: {np.prod(encoded.shape):,.0f}\t| {enc_size/1024:,.2f} KB"
+            f"| size: {encoded.nelement():,.0f}\t| {enc_size/1024:,.2f} KB"
         )
         t0 = time.time()
         decoded = self.decoder(encoded)
         dec_time = time.time() - t0
-        dec_size = np.prod(decoded.shape) * 32
+        dec_size = decoded.nelement() * 32
 
         print(
             f"decoded: {decoded.shape} {decoded.dtype}\t"
-            f"| size: {np.prod(decoded.shape):,.0f}\t| {dec_size/1024:,.2f} KB"
+            f"| size: {decoded.nelement():,.0f}\t| {dec_size/1024:,.2f} KB"
         )
-        print(f"compression ratio: {orig_size/enc_size:.2f} | bpp: {enc_size/orig_size:.4f}")
+        print(
+            f"compression ratio: {orig_size/enc_size:.2f} | bpp: {enc_size/orig_size:.4f}"
+        )
         print(
             f"Encoding time: {enc_time:.3f} s | Decoding time: {dec_time:.3f} s |"
             f" Total time: {enc_time+dec_time:.3f} s"
@@ -361,7 +367,9 @@ class ModelTrainer:
             self.train_dataset = self.train_dataset.to(self.device)
 
         n_samples = len(self.train_dataset)
-        split_sizes = [int(n_samples * fr) for fr in self.config["train"]["split_ratio"]]
+        split_sizes = [
+            int(n_samples * fr) for fr in self.config["train"]["split_ratio"]
+        ]
         split_sizes[0] += n_samples - sum(split_sizes)
 
         self.train_data, self.validation_data = random_split(
@@ -395,7 +403,10 @@ class ModelTrainer:
             f"DATA: {n_samples} samples | shape {self.train_dataset.shape[1:]}",
             f" | dtype {self.train_dataset.dtype}",
         )
-        print(f"\tTraining:   {split_sizes[0]:4.0f} ({split_sizes[0] / n_samples:.1%}) | ", end="")
+        print(
+            f"\tTraining:   {split_sizes[0]:4.0f} ({split_sizes[0] / n_samples:.1%}) | ",
+            end="",
+        )
         print(f"Validation: {split_sizes[1]:4.0f} ({split_sizes[1] / n_samples:.1%})")
 
     def train(
@@ -441,7 +452,10 @@ class ModelTrainer:
 
         start_time = time.time()
         for epoch in trange(
-            self.last_epoch, max_epochs, desc="Training", disable=(self.verbose is None or not pbar)
+            self.last_epoch,
+            max_epochs,
+            desc="Training",
+            disable=(self.verbose is None or not pbar),
         ):
             self.last_epoch = epoch + 1
 
@@ -465,23 +479,21 @@ class ModelTrainer:
                     config=self.config,
                     augmentations=self.transforms,
                 )
-                tl = np.mean(train_loss)
-                tl_upper, tl_lower = np.quantile(train_loss, [0.8, 0.2])
-                tl_std = np.std(train_loss)
-                vl = np.mean(validation_loss)
-                vl_upper, vl_lower = np.quantile(validation_loss, [0.8, 0.2])
-                vl_std = np.std(validation_loss)
+                tl = torch.mean(train_loss)
+                tl_lower = torch.quantile(train_loss, 0.2)
+                tl_upper = torch.quantile(train_loss, 0.8)
+                vl = torch.mean(validation_loss)
+                vl_lower = torch.quantile(validation_loss, 0.2)
+                vl_upper = torch.quantile(validation_loss, 0.8)
 
                 self.train_losses.append(train_loss)
                 self.train_losses_min.append(tl_lower)
                 self.train_losses_max.append(tl_upper)
                 self.train_losses_mean.append(tl)
-                self.train_losses_std.append(tl_std)
                 self.validation_losses.append(validation_loss)
                 self.validation_losses_min.append(vl_lower)
                 self.validation_losses_max.append(vl_upper)
                 self.validation_losses_mean.append(vl)
-                self.validation_losses_std.append(vl_std)
 
                 self.times.append(time.time() - t0)
                 elapsed_time = time.time() - start_time
@@ -491,10 +503,14 @@ class ModelTrainer:
 
                 run_time = time.time() - t0
                 prev_train_loss = (
-                    self.train_losses_mean[-2] if len(self.train_losses_mean) > 1 else tl
+                    self.train_losses_mean[-2]
+                    if len(self.train_losses_mean) > 1
+                    else tl
                 )
                 prev_validation_loss = (
-                    self.validation_losses_mean[-2] if len(self.validation_losses_mean) > 1 else vl
+                    self.validation_losses_mean[-2]
+                    if len(self.validation_losses_mean) > 1
+                    else vl
                 )
                 tlc = (tl - prev_train_loss) / prev_train_loss
                 vlc = (vl - prev_validation_loss) / prev_validation_loss
@@ -522,7 +538,9 @@ class ModelTrainer:
                         self.save(save_dir)
                     if plot and test_imgs is not None:
                         savename = self.get_save_name(save_dir)
-                        self.plot_loss_and_reconstruction(test_imgs=test_imgs, savename=savename)
+                        self.plot_loss_and_reconstruction(
+                            test_imgs=test_imgs, savename=savename
+                        )
                         plt.pause(0.05)
             except KeyboardInterrupt:
                 if self.verbose:
@@ -556,7 +574,9 @@ class ModelTrainer:
         elif len(img.shape) == 2:
             img = img.unsqueeze(0).unsqueeze(0)
         elif len(img.shape) != 4:
-            raise ValueError(f"Input shape for this encoder must be 3D or 4D, got {img.shape}")
+            raise ValueError(
+                f"Input shape for this encoder must be 3D or 4D, got {img.shape}"
+            )
         return self.encoder(img.to(self.device))  # .cpu().detach().squeeze()
 
     def decode(self, encoded: torch.Tensor) -> torch.Tensor:
@@ -576,17 +596,15 @@ class ModelTrainer:
             encoded = encoded.unsqueeze(1)
         return self.decoder(encoded.to(self.device))  # .cpu().detach().squeeze()
 
-    def eval(self, img: torch.Tensor | np.ndarray) -> np.ndarray:
+    def eval(self, img: torch.FloatTensor) -> torch.FloatTensor:
         """Encode and decode an image using the trained model.
 
         Args:
-            img (torch.Tensor | np.ndarray): The image to evaluate.
+            img (torch.FloatTensor): The image to evaluate.
 
         Returns:
-            np.ndarray: The reconstructed image.
+            torch.FloatTensor: The reconstructed image.
         """
-        if isinstance(img, np.ndarray):
-            img = torch.from_numpy(img)
         if len(img.shape) == 2:
             img = img.unsqueeze(0).unsqueeze(0)
         elif len(img.shape) == 3:
@@ -594,7 +612,7 @@ class ModelTrainer:
         enc = self.encoder(img.to(self.device))
         if len(enc.shape) == 1:
             enc = enc.unsqueeze(0)
-        return self.decode(enc).squeeze().detach().cpu().numpy()
+        return self.decode(enc).squeeze().detach().cpu()
 
     def plot_losses(self, ax=None, logx=False, logy=False, **kwargs) -> None:
         """
@@ -616,37 +634,39 @@ class ModelTrainer:
             ax = plt.gca()
 
         x_train = (
-            np.arange(len(self.train_losses_mean)) - 0.5
+            torch.arange(len(self.train_losses_mean)) - 0.5
         )  # training data is half a step behind
-        x_val = np.arange(len(self.train_losses_mean))
+        x_val = torch.arange(len(self.train_losses_mean))
         # see https://twitter.com/aureliengeron/status/1110839223878184960 for explanation
 
         ax.plot(x_train, self.train_losses_mean, label="Training loss", **kwargs)
         ax.plot(x_val, self.validation_losses_mean, label="Validation loss", **kwargs)
         try:
-            tupper = np.array(self.train_losses_max)
-            tlower = np.array(self.train_losses_min)
+            tupper = torch.Tensor(self.train_losses_max)
+            tlower = torch.Tensor(self.train_losses_min)
             ax.fill_between(x_train, tlower, tupper, alpha=0.2)
 
-            vupper = np.array(self.validation_losses_max)
-            vlower = np.array(self.validation_losses_min)
+            vupper = torch.Tensor(self.validation_losses_max)
+            vlower = torch.Tensor(self.validation_losses_min)
             ax.fill_between(x_val, vlower, vupper, alpha=0.2)
         except ValueError:
             pass
 
         # remove outliers
-        clean_train_loss = np.clip(
-            self.train_losses_mean,
+        train_losses_mean = torch.tensor(self.train_losses_mean)
+        valid_losses_mean = torch.tensor(self.validation_losses_mean)
+        clean_train_loss = torch.clamp(
+            train_losses_mean,
             0,
-            np.mean(self.train_losses_mean + 3 * np.std(self.train_losses_mean)),
+            torch.mean(train_losses_mean + 3 * torch.std(train_losses_mean)),
         )
-        clean_valid_loss = np.clip(
-            self.validation_losses_mean,
+        clean_valid_loss = torch.clamp(
+            valid_losses_mean,
             0,
-            np.mean(self.validation_losses_mean + 3 * np.std(self.validation_losses_mean)),
+            torch.mean(valid_losses_mean + 3 * torch.std(valid_losses_mean)),
         )
 
-        ax.set_ylim(0, np.max(np.concatenate([clean_train_loss, clean_valid_loss]) * 1.1))
+        ax.set_ylim(0, torch.max(torch.cat([clean_train_loss, clean_valid_loss])) * 1.1)
 
         ax.set_xlabel("Epoch")
         ax.set_ylabel(f"Loss {self.config['loss']['criteria']}")
@@ -659,7 +679,9 @@ class ModelTrainer:
 
         # plt.show()
 
-    def plot_loss_and_reconstruction(self, test_imgs: torch.tensor, savename=None) -> None:
+    def plot_loss_and_reconstruction(
+        self, test_imgs: torch.tensor, savename=None
+    ) -> None:
         """
         Plots the loss and reconstruction images for the given test images.
 
@@ -687,13 +709,15 @@ class ModelTrainer:
         self.plot_losses(ax=axes["loss"])
         for i, img in enumerate(test_imgs):
             rec = self.eval(img)
-            img = img.detach().squeeze().cpu().numpy()
-            clim = np.quantile(img, [0.0, 1.0])
+            img = img.detach().squeeze().cpu()
+            clim = img.min(), img.max()
             diff = img - rec
             vmax = clim[1]
             axes[f"original_{i}"].imshow(img, cmap="viridis", clim=clim, origin="lower")
             axes[f"rec_{i}"].imshow(rec, cmap="viridis", clim=clim, origin="lower")
-            axes[f"diff_{i}"].imshow(diff, cmap="bwr", clim=(-vmax, vmax), origin="lower")
+            axes[f"diff_{i}"].imshow(
+                diff, cmap="bwr", clim=(-vmax, vmax), origin="lower"
+            )
         # fig.canvas.flush_events()
         # plt.pause(0.05)
         if savename is not None:
@@ -766,11 +790,15 @@ class ModelTrainer:
 
         if ext_model is not None:
             reconstructed = (
-                torch.stack([ext_model(img) for img in processed_test_data]).detach().cpu()
+                torch.stack([ext_model(img) for img in processed_test_data])
+                .detach()
+                .cpu()
             )
         else:
             reconstructed = (
-                torch.stack([self.decode(self.encode(img)) for img in processed_test_data])
+                torch.stack(
+                    [self.decode(self.encode(img)) for img in processed_test_data]
+                )
                 .detach()
                 .cpu()
             )
@@ -778,7 +806,11 @@ class ModelTrainer:
         for img, rec in zip(processed_test_data, reconstructed):
             vals = []
             for metric in mfunc:
-                res = metric(rec.squeeze(), img.squeeze(), **kwargs).to(torch.float32).numpy()
+                res = (
+                    metric(rec.squeeze(), img.squeeze(), **kwargs)
+                    .to(torch.float32)
+                    .numpy()
+                )
                 vals.append(res)
             df.append(pd.Series(vals, index=metrics, dtype=float))
         out = pd.DataFrame(df, columns=metrics)

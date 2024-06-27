@@ -1,8 +1,6 @@
 import torch
-from torch import nn
 import torchmetrics as tm
-
-from arpesnet import transform as tr
+from torch import nn
 
 
 def calc_loss(
@@ -136,8 +134,8 @@ def train_epoch(
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        train_loss.append(loss.detach().cpu().numpy())
-    return train_loss
+        train_loss.append(loss.detach().cpu())
+    return torch.FloatTensor(list(train_loss))
 
 
 def test_epoch(
@@ -196,6 +194,6 @@ def test_epoch(
                 loss_criterion=config["loss"]["criteria"],
                 loss_weight=config["loss"]["weights"],
             )
-            test_loss.append(loss.detach().cpu().numpy())
+            test_loss.append(loss.detach().cpu())
 
-    return test_loss
+    return  torch.FloatTensor(list(test_loss))

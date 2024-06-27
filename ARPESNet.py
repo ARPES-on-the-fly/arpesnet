@@ -1,16 +1,15 @@
 import sys
 import time
-from pathlib import Path
 import warnings
+from pathlib import Path
 
+import matplotlib.pyplot as plt
 import torch
 from torch import nn
-from torch.utils.data import DataLoader, random_split
 from torch.optim import Adam
+from torch.utils.data import DataLoader, random_split
 from torchvision.transforms import v2
-
 from tqdm.auto import tqdm
-import matplotlib.pyplot as plt
 
 import arpesnet as an
 

@@ -10,9 +10,6 @@ size decreasing as the depth of the network increases.
 from torch import nn
 import torch
 
-from neuralarpes import quantizers as Q
-
-
 def conv_block(
     in_channels: int,
     out_channels: int,
@@ -58,7 +55,7 @@ def deconv_block(
             kernel_size,
             stride=stride,
             padding=kernel_size // 2,
-            output_padding=0 if stride is 1 else stride // 2,
+            output_padding=0 if stride == 1 else stride // 2,
         )
     )
     layers.append(relu(**relu_kwargs))
@@ -156,18 +153,9 @@ class Encoder(nn.Module):
         input_shape: tuple[int, int] = (256, 256),
         relu=nn.PReLU,
         relu_kwargs=dict(num_parameters=1, init=0.25),
-        quantizer=None,
         **kwargs,
     ) -> None:
         super().__init__()
-        if isinstance(quantizer, list | tuple):
-            quantizer = quantizer[0]
-        if isinstance(quantizer, str):
-            self.quantizer = getattr(Q, quantizer)
-        elif callable(quantizer):
-            self.quantizer = quantizer
-        else:
-            self.quantizer = None
 
         self.input_shape = torch.Size(input_shape)
         self.encoder_cnn = base_model(
@@ -187,8 +175,6 @@ class Encoder(nn.Module):
                 f"Input shape {x.shape[-2:]} does not match expected shape {self.input_shape}"
             )
         x = self.encoder_cnn(x)
-        if self.quantizer is not None:
-            x = self.quantizer(x)
         return x
 
 
@@ -203,20 +189,9 @@ class Decoder(nn.Module):
         input_shape: tuple[int, int] = (256, 256),
         relu=nn.PReLU,
         relu_kwargs=dict(num_parameters=1, init=0.25),
-        quantizer=None,
         **kwargs,
     ) -> None:
         super().__init__()
-        if isinstance(quantizer, list | tuple):
-            dequantizer = quantizer[1]
-        else:
-            dequantizer = None
-        if isinstance(dequantizer, str):
-            self.dequantizer = getattr(Q, dequantizer)
-        elif callable(dequantizer):
-            self.dequantizer = dequantizer
-        else:
-            self.dequantizer = None
 
         self.input_shape = torch.tensor(input_shape)
         self.decoder_cnn = base_model(
@@ -230,7 +205,5 @@ class Decoder(nn.Module):
         )[1]
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        if self.dequantizer is not None:
-            x = self.dequantizer(x)
         x = self.decoder_cnn(x)
         return x
