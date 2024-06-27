@@ -100,6 +100,7 @@ class ModelTrainer:
         self.validation_data_preprocessed = None
         self.train_loader = None
         self.validation_loader = None
+        self.save_path = None
 
         self._init_model()
         self._init_optimizer()
@@ -146,22 +147,25 @@ class ModelTrainer:
         Returns:
             str: Save name for the ModelTrainer.
         """
-        if directory is None:
-            directory = self.config["paths"]["results"]
-        directory = Path(directory)
-        if not directory.is_dir():
-            directory.mkdir(parents=True, exist_ok=True)
-            if self.verbose:
-                print(f"Created directory {directory}")
-        save_name = f"{self.model}_e{self.last_epoch}"
-        save_path = directory / save_name
-        i = 1
-        while save_path.with_suffix(".pth").exists():
-            save_path = directory / f"{save_name}_{i:03d}"
-            i += 1
-            if i > 1000:  # just in case
-                raise FileExistsError(f"File {save_path} exists")
-        return save_path
+        if self.save_path is None:
+
+            if directory is None:
+                directory = self.config["paths"]["results"]
+            directory = Path(directory)
+            if not directory.is_dir():
+                directory.mkdir(parents=True, exist_ok=True)
+                if self.verbose:
+                    print(f"Created directory {directory}")
+            save_name = f"{self.model}_e{self.last_epoch}"
+            save_path = directory / save_name
+            i = 1
+            while save_path.with_suffix(".pth").exists():
+                save_path = directory / f"{save_name}_{i:03d}"
+                i += 1
+                if i > 1000:  # just in case
+                    raise FileExistsError(f"File {save_path} exists")
+            self.save_path = save_path
+        return self.save_path
 
     def save(
         self,
