@@ -60,9 +60,9 @@ class ModelTrainer:
         self.config = load_config(config)
         self.generator = torch.manual_seed(self.config["device"]["seed"])
         self.device = (
-            torch.device("cuda")
-            if (torch.cuda.is_available() and self.config["device"]["use_gpu"])
-            else torch.device("cpu")
+            torch.device("mps")
+            # if (torch.cuda.is_available() and self.config["device"]["use_gpu"])
+            # else torch.device("cpu")
         )
         self.verbose = verbose
 
