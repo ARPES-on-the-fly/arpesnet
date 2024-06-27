@@ -15,8 +15,6 @@ import arpesnet as an
 
 warnings.filterwarnings("ignore")
 
-print("Python", sys.version)
-print(f"Pytorch version: {torch.__version__} | CUDA enabled = {torch.cuda.is_available()}")
 
 ROOT_DIR = Path(r"D:\data\ARPESdatabase\ARPESNet")
 TRAINING_DIR = ROOT_DIR / "train_data"
@@ -26,7 +24,7 @@ TEST_IMGS_FILE = ROOT_DIR / "test_imgs.pt"
 INPUT_SHAPE = (256, 256)
 NORM_RANGE = (0, 100)
 
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+DEVICE = "gpu"
 
 BATCH_SIZE = 32
 SPLIT_RATIO = (0.8, 0.2)
@@ -36,6 +34,20 @@ N_EPOCHS = 10
 DENOISER = False
 SAVE_EVERY = 100
 SAVE_AT_EPOCH = [10, 50]
+
+if DEVICE == "gpu":
+    if torch.cuda.is_available():
+        DEVICE = torch.device("cuda")
+    elif torch.backends.mps.is_available():
+        DEVICE = torch.device("mps")
+    else:
+        print("GPU not available, using CPU")
+        DEVICE = torch.device("cpu")
+else:
+    DEVICE = torch.device("cpu")
+
+print("Python", sys.version)
+print(f"Pytorch version: {torch.__version__} | running on {DEVICE}")
 
 
 # set the seed for reproducibility

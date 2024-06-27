@@ -57,11 +57,14 @@ class ModelTrainer:
         """
         self.config = load_config(config)
         self.generator = torch.manual_seed(self.config["device"]["seed"])
-        self.device = (
-            torch.device("cuda")
-            if (torch.cuda.is_available() and self.config["device"]["use_gpu"])
-            else torch.device("cpu")
-        )
+        if self.config["device"]["use_gpu"]:
+            if torch.cuda.is_available():
+                self.device = torch.device("cuda")
+            elif torch.backends.mps.is_available():
+                self.device = torch.device("mps")
+            else:
+                print("GPU not available, using CPU")
+                self.device = torch.device("cpu")
         self.verbose = verbose
 
         self.model = None
