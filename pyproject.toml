@@ -2,15 +2,33 @@
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
-[tool.poetry]
-name = "arpesnet"
-version = "1.0.0"
-description = "A package for neural network-based ARPES analysis"
-authors = ["Steinn Ymir Agustsson", "Mohammad Ahsanul Haque", "Thi Tam Truong"]
-license = "GNU General Public License v3.0"
-readme = "README.md"
-repository = "https://github.com/ARPESonthefly/arpesnet"
-keywords = ["ARPES", "neural network", "machine learning"]
+# [tool.poetry]
+# name = "arpesnet"
+# version = "1.0.0"
+# description = "A package for neural network-based ARPES analysis"
+# authors = ["Steinn Ymir Agustsson", "Mohammad Ahsanul Haque", "Thi Tam Truong"]
+# license = "GNU General Public License v3.0"
+# readme = "README.md"
+# repository = "https://github.com/ARPESonthefly/arpesnet"
+# keywords = ["ARPES", "neural network", "machine learning"]
+
+[tool.ruff]
+include = ["sed/*.py", "tests/*.py"]
+select = [
+    "E", # pycodestyle
+    "W", # pycodestyle
+    "PL", # pylint
+]
+ignore = [
+    "E701", # Multiple statements on one line (colon)
+    "PLR0911", # Too many return statements
+    "PLR0912", # Too many branches
+    "PLR0913", # Too many arguments in function definition
+    "PLR0915", # Too many statements
+    "PLR2004", # Magic value used instead of constant
+    "PLR5501", # else-if-used
+    "PLW2901", # redefined-loop-name
+]
 
 fixable = ["ALL"]
 line-length = 100 # change the default line length number or characters.
