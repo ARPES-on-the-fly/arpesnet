@@ -26,14 +26,22 @@ def load_trainer(filepath: str | Path) -> ModelTrainer:
     Returns:
         ModelTrainer: Loaded ModelTrainer object.
     """
-    loaded = torch.load(filepath)
+    try:
+        loaded = torch.load(filepath)
+    except RuntimeError:
+        loaded = torch.load(filepath, map_location="cpu")
     trainer = ModelTrainer(loaded["config"])
     trainer._init_model()
     trainer._init_optimizer()
     trainer.encoder.load_state_dict(loaded.pop("encoder_state_dict"))
     trainer.decoder.load_state_dict(loaded.pop("decoder_state_dict"))
     trainer.optimizer.load_state_dict(loaded.pop("optimizer_state_dict"))
+    # trainer.encoder.to(trainer.device)
+    # trainer.decoder.to(trainer.device)
     for k, v in loaded.items():
+        # try:
+        #     setattr(trainer, k, v.to(trainer.device))
+        # except AttributeError:
         setattr(trainer, k, v)
     return trainer
 
