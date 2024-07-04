@@ -64,16 +64,8 @@ A few additional packages are required to run the notebooks available in the `no
 To install these, install the package with the following command:
 
 ```bash
-pip install -e .[notebook]
+pip install -e .[notebooks]
 ```
-
-The notebook `Clustering application.ipynb` requires the `scikit-learn` package.
-To install the package including this requirement, run instead the following command:
-
-```bash
-pip install -e .[notebook,clustering]
-```
-
 
 # Citation and Acknowledgements
 
