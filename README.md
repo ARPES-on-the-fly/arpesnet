@@ -74,7 +74,7 @@ If you use this package in your work, please cite the following paper:
 ```bibtex
 @article{arpesnet,
   title={Neural networks applied to ARPES data},
-  author={S.Y. Agustsson and P. Hofmann},
+  author={Steinn  Ýmir Ágústsson, Mohammad Ahsanul Haque, Thi Tam Truong, Marco Bianchi, Nikita Klyuchnikov, Davide Mottin, Panagiotis Karras and Philip Hofmann},
   status={In Preparation}
 }
 ```
