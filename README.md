@@ -71,10 +71,21 @@ pip install -e .[notebooks]
 
 If you use this package in your work, please cite the following paper:
 
+Steinn Ýmir Ágústsson, Mohammad Ahsanul Haque, Thi Tam Truong, Marco Bianchi, Nikita Klyuchnikov, Davide Mottin, Panagiotis Karras, Philip Hofmann; **An autoencoder for compressing angle-resolved photoemission spectroscopy data.** *Mach. Learn.: Sci. Technol.* **6** 015019 (2025) 
+
+DOI: [10.1088/2632-2153/ada8f2](https://doi.org/10.1088/2632-2153/ada8f2)
 ```bibtex
-@article{arpesnet,
-  title={Neural networks applied to ARPES data},
-  author={Steinn  Ýmir Ágústsson, Mohammad Ahsanul Haque, Thi Tam Truong, Marco Bianchi, Nikita Klyuchnikov, Davide Mottin, Panagiotis Karras and Philip Hofmann},
-  status={In Preparation}
+@article{Ágústsson_2025,
+doi = {10.1088/2632-2153/ada8f2},
+url = {https://dx.doi.org/10.1088/2632-2153/ada8f2},
+year = {2025},
+month = {jan},
+publisher = {IOP Publishing},
+volume = {6},
+number = {1},
+pages = {015019},
+author = {Ágústsson, Steinn Ýmir and Haque, Mohammad Ahsanul and Truong, Thi Tam and Bianchi, Marco and Klyuchnikov, Nikita and Mottin, Davide and Karras, Panagiotis and Hofmann, Philip},
+title = {An autoencoder for compressing angle-resolved photoemission spectroscopy data},
+journal = {Machine Learning: Science and Technology},
 }
 ```
